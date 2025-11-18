@@ -12,15 +12,18 @@ ISO_Root/
 │
 └── scripts/
     ├── Register-ThisPC.ps1       (Main registration script)
-    ├── Register-ThisPC.ini       (🔴 SENSITIVE credentials)
-    ├── branding.ps1      (Corporate branding module)
+    ├── Register-ThisPC.json      (🔴 SENSITIVE credentials - preferred)
+    ├── Register-ThisPC.ini       (🔴 SENSITIVE credentials - legacy)
+    ├── branding.ps1              (Corporate branding module)
     ├── .gitignore                (Git protection)
     │
     └── Documentation/            (Reference materials)
         ├── README.md
         ├── SECURITY_README.md
         ├── QUICK_REFERENCE.md
+        ├── MIGRATION_GUIDE.md
         ├── ISO_DEPLOYMENT_GUIDE.md
+        ├── Register-ThisPC.json.example
         ├── Test-Enhancements.ps1
         ├── TEST_RESULTS.md
         └── Prepare-ISO-Structure.ps1
@@ -34,7 +37,7 @@ ISO_Root/
 - Users can simply type: `Register-ThisPC.cmd` (no navigation needed)
 
 **2. Security**
-- Sensitive files (INI with credentials) are in `scripts/` subfolder, not root
+- Sensitive files (JSON/INI with credentials) are in `scripts/` subfolder, not root
 - Clear separation between launcher and components
 - Documentation included but organized
 
@@ -83,41 +86,55 @@ Once the ISO/USB is created and mounted during Windows setup:
 
 ⚠️ **IMPORTANT**
 
-- The `Register-ThisPC.ini` file contains HIGHLY SENSITIVE Azure AD credentials
+- The `Register-ThisPC.json` or `Register-ThisPC.ini` files contain HIGHLY SENSITIVE Azure AD credentials
 - Only authorized IT personnel should have access to this structure
 - Encrypt USB drives with BitLocker To Go
 - Track each ISO/USB deployment for compliance
 - Rotate credentials every 90 days
 - Delete files from devices after provisioning
 
-See `scripts/Documentation/SECURITY_README.md` for complete security guidelines.
+**Configuration File Options:**
+- **JSON (preferred)**: Modern, cleaner format - `Register-ThisPC.json`
+- **INI (legacy)**: Traditional format - `Register-ThisPC.ini`
+- Script checks for JSON first, then falls back to INI
+
+See `scripts/Documentation/SECURITY_README.md` and `MIGRATION_GUIDE.md` for complete security guidelines and migration information.
 
 ## Version Information
 
-**Toolkit Version:** 4.0.0 - PRODUCTION RELEASE
-**Last Updated:** 17/11/2025
+**Toolkit Version:** 4.1.0 - CODE QUALITY UPDATE
+**Last Updated:** 18/11/2025
 **Author:** Community Edition
 
-### What's New in v4.0.0
-- **Production Ready**: Removed all pause statements for automated deployments
-- **Clean Exit**: Script exits without user interaction after completion
-- **Automation Friendly**: Perfect for scripted OOBE deployments
-- **All v3.3.0 Features**: Includes all previous enhancements
-- **Fully Validated**: Complete documentation and testing
+### What's New in v4.1.0
+- **JSON Configuration Support**: Modern JSON config files (preferred over INI)
+- **Enhanced Automation**: New `-DuplicateHandling` parameter for unattended deployments
+- **Better Validation**: ValidateSet attributes for platform architectures
+- **Performance Optimization**: Removed unnecessary CIM session overhead
+- **Full Backward Compatibility**: Existing INI files and workflows continue to work
+- **Comprehensive Documentation**: New MIGRATION_GUIDE.md and examples
 
-### Features (from v3.3.0)
+### Key Features
+- **Dual Config Format**: Supports both JSON (modern) and INI (legacy)
+- **Automation Modes**: Prompt, Delete, Skip, or Error on duplicates
 - **Unified Group Tag Management**: Group Tag and Order ID use the same value
 - **Proactive Duplicate Detection**: Checks for existing devices BEFORE upload
 - **Smart Re-registration**: Shows current vs. new Group Tag comparison
 - **Improved PowerShell 7 Handling**: No unnecessary re-downloads
 - **Enhanced Network Testing**: Better API authentication response handling
 
+### Previous Versions
+- **v4.0.0**: Production release with automation-friendly clean exit
+- **v3.3.0**: Unified Group Tag and proactive duplicate detection
+
 ## Related Documentation
 
+- **Migration Guide:** `scripts/Documentation/MIGRATION_GUIDE.md` ⭐ NEW
 - **Complete Guide:** `scripts/Documentation/ISO_DEPLOYMENT_GUIDE.md`
 - **Quick Reference:** `scripts/Documentation/QUICK_REFERENCE.md`
 - **Security Guide:** `scripts/Documentation/SECURITY_README.md`
 - **Test Results:** `scripts/Documentation/TEST_RESULTS.md`
+- **JSON Template:** `scripts/Documentation/Register-ThisPC.json.example` ⭐ NEW
 
 ---
 
