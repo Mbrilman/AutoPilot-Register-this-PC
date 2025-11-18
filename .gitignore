@@ -1,0 +1,76 @@
+# ================================================================================
+# .gitignore for Autopilot Registration Toolkit
+# ================================================================================
+#
+# This file prevents sensitive credentials and temporary files from being
+# committed to version control systems (Git, etc.)
+#
+# IMPORTANT: Always verify sensitive files are not tracked before committing!
+# ================================================================================
+
+# === CRITICAL - Sensitive Credentials ===
+# Never commit these files - they contain Azure AD secrets
+Register-ThisPC.ini
+*.ini
+*credentials*
+*secret*
+*password*
+*.key
+*.pem
+*.pfx
+
+# === Log Files ===
+# May contain sensitive runtime information
+*.log
+*.log.*
+logs/
+*.txt
+
+# === Temporary Files ===
+*.tmp
+*.temp
+~$*
+*.bak
+*.old
+
+# === PowerShell Specific ===
+*.ps1~
+*.psm1~
+
+# === Windows System Files ===
+Thumbs.db
+desktop.ini
+$RECYCLE.BIN/
+
+# === macOS System Files ===
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# === Editor/IDE Files ===
+.vscode/
+.vs/
+*.swp
+*.swo
+*~
+
+# === Compressed Archives (may contain sensitive data) ===
+*.zip
+*.7z
+*.rar
+*.tar.gz
+
+# === Documentation (if containing sensitive info) ===
+# Uncomment if needed:
+# INTERNAL_NOTES.md
+# CREDENTIALS.md
+
+# ================================================================================
+# SECURITY REMINDER:
+# Even with .gitignore, already-tracked files will remain in Git history.
+# If you accidentally committed sensitive files:
+#   1. Immediately notify IT Security
+#   2. Rotate compromised credentials
+#   3. Use tools like BFG Repo-Cleaner to remove from history
+#   4. Force push cleaned repository (requires team coordination)
+# ================================================================================
