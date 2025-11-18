@@ -11,7 +11,9 @@
 # === CRITICAL - Sensitive Credentials ===
 # Never commit these files - they contain Azure AD secrets
 Register-ThisPC.ini
+Register-ThisPC.json
 *.ini
+*.json
 *credentials*
 *secret*
 *password*

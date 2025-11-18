@@ -69,14 +69,42 @@ Release Notes:
 - v2.1.4: Added a detailed comment block explaining the relationship between 'Group Tag', 'Order ID', and how they are displayed in the Intune Portal ('Device group' vs 'Profile assigned').
 - v2.1.3: Reverted final summary block to a simpler, stable version from v2.0.8.
 
+.PARAMETER DryRun
+Enables debug mode with full logging to a timestamped log file. No actual changes will be made to Autopilot.
+
+.PARAMETER DuplicateHandling
+Controls how the script handles devices that are already registered in Autopilot.
+Valid values:
+- Prompt (default): Ask the user what to do when a duplicate is found
+- Delete: Automatically delete and re-register the device
+- Skip: Skip registration and keep existing device settings
+- Error: Throw an error and abort registration
+
 .EXAMPLE
-# Run on the target machine. It will automatically handle PowerShell 7 installation if needed and then launch the registration menus.
+# Interactive mode - prompts for user input when needed
 .\Register-ThisPC.ps1
+
+.EXAMPLE
+# Automated mode - automatically delete and re-register duplicates
+.\Register-ThisPC.ps1 -DuplicateHandling Delete
+
+.EXAMPLE
+# Dry run mode for testing
+.\Register-ThisPC.ps1 -DryRun
+
+.EXAMPLE
+# Automated mode with dry run
+.\Register-ThisPC.ps1 -DuplicateHandling Delete -DryRun
 #>
 
 [CmdletBinding()]
 param (
-    [Switch]$DryRun
+    [Parameter(Mandatory = $false)]
+    [Switch]$DryRun,
+
+    [Parameter(Mandatory = $false)]
+    [ValidateSet("Prompt", "Skip", "Delete", "Error")]
+    [string]$DuplicateHandling = "Prompt"
 )
 
 # --- Define Script Root ---
@@ -291,6 +319,8 @@ function Ensure-ModuleInstalled {
 # --- Function to Get Latest PowerShell 7 Release ---
 function Get-LatestPowerShellRelease {
     param (
+        [Parameter(Mandatory = $false)]
+        [ValidateSet("x64", "x86", "arm64", "arm32")]
         [string]$Architecture = "x64"
     )
 
@@ -421,68 +451,97 @@ function Get-TenantCredentials {
     Write-Host ""
 
     $credentials = @{}
-    $configFilePath = Join-Path $scriptRoot "Register-ThisPC.ini"
 
-    if (-not (Test-Path $configFilePath)) {
-        Write-Error "Configuration file 'Register-ThisPC.ini' not found at $configFilePath."
+    # Try JSON configuration first (preferred)
+    $jsonConfigPath = Join-Path $scriptRoot "Register-ThisPC.json"
+    $iniConfigPath = Join-Path $scriptRoot "Register-ThisPC.ini"
+
+    if (Test-Path $jsonConfigPath) {
+        # Load from JSON (cleaner, more modern approach)
+        Write-Host "Reading credentials from $jsonConfigPath..." -ForegroundColor Green
+        try {
+            $configData = Get-Content $jsonConfigPath -Raw | ConvertFrom-Json
+
+            if ($configData.TenantID -and $configData.AppID -and $configData.AppSecret) {
+                $credentials.TenantID = $configData.TenantID
+                $credentials.AppID = $configData.AppID
+                $credentials.AppSecret = $configData.AppSecret
+            }
+            else {
+                throw "JSON config is missing required fields (TenantID, AppID, AppSecret)"
+            }
+        }
+        catch {
+            Write-Error "Failed to parse JSON configuration: $($_.Exception.Message)"
+            throw "Invalid JSON config file."
+        }
+    }
+    elseif (Test-Path $iniConfigPath) {
+        # Fall back to INI (backward compatibility)
+        Write-Host "Reading credentials from $iniConfigPath..." -ForegroundColor Green
+        $configLines = Get-Content $iniConfigPath
+
+        # INI parsing with comment support
+        $inTargetSection = $false
+        $sectionFound = $false
+
+        foreach ($line in $configLines) {
+            # Skip empty lines and comments
+            if ([string]::IsNullOrWhiteSpace($line) -or $line.Trim().StartsWith(';')) {
+                continue
+            }
+
+            # Check for section headers
+            if ($line -match '^\[(.+)\]$') {
+                $sectionName = $Matches[1]
+                if ($sectionName -eq 'YourCompanyCredentials') {
+                    $inTargetSection = $true
+                    $sectionFound = $true
+                }
+                else {
+                    $inTargetSection = $false
+                }
+                continue
+            }
+
+            # Parse key-value pairs in target section
+            if ($inTargetSection -and $line -match '^(.+?)=(.+)$') {
+                $key = $Matches[1].Trim()
+                $value = $Matches[2].Trim()
+
+                switch ($key) {
+                    'TenantID' { $credentials.TenantID = $value }
+                    'AppID' { $credentials.AppID = $value }
+                    'AppSecret' { $credentials.AppSecret = $value }
+                }
+            }
+        }
+
+        if (-not $sectionFound) {
+            Write-Error "Section [YourCompanyCredentials] not found in $iniConfigPath."
+            throw "Config section missing."
+        }
+    }
+    else {
+        Write-Error "Configuration file not found. Looking for:"
+        Write-Host "  - $jsonConfigPath (preferred, JSON format)" -ForegroundColor Yellow
+        Write-Host "  - $iniConfigPath (legacy, INI format)" -ForegroundColor Yellow
+        Write-Host ""
         Write-Host "This file contains sensitive Azure AD credentials required for Autopilot registration." -ForegroundColor Yellow
         Write-Host "If you are authorized to use this tool, contact IT Security to obtain the configuration file." -ForegroundColor Yellow
         throw "Config file missing."
     }
 
-    Write-Host "Reading credentials from $configFilePath..." -ForegroundColor Green
-    $configLines = Get-Content $configFilePath
-
-    # INI parsing with comment support
-    $inTargetSection = $false
-    $sectionFound = $false
-
-    foreach ($line in $configLines) {
-        # Skip empty lines and comments
-        if ([string]::IsNullOrWhiteSpace($line) -or $line.Trim().StartsWith(';')) {
-            continue
-        }
-
-        # Check for section headers
-        if ($line -match '^\[(.+)\]$') {
-            $sectionName = $Matches[1]
-            if ($sectionName -eq 'YourCompanyCredentials') {
-                $inTargetSection = $true
-                $sectionFound = $true
-            }
-            else {
-                $inTargetSection = $false
-            }
-            continue
-        }
-
-        # Parse key-value pairs in target section
-        if ($inTargetSection -and $line -match '^(.+?)=(.+)$') {
-            $key = $Matches[1].Trim()
-            $value = $Matches[2].Trim()
-
-            switch ($key) {
-                'TenantID' { $credentials.TenantID = $value }
-                'AppID' { $credentials.AppID = $value }
-                'AppSecret' { $credentials.AppSecret = $value }
-            }
-        }
-    }
-
-    if (-not $sectionFound) {
-        Write-Error "Section [YourCompanyCredentials] not found in $configFilePath."
-        throw "Config section missing."
-    }
-
+    # Validate credentials
     if ([string]::IsNullOrWhiteSpace($credentials.TenantID) -or
         [string]::IsNullOrWhiteSpace($credentials.AppID) -or
         [string]::IsNullOrWhiteSpace($credentials.AppSecret)) {
-        Write-Error "Missing one or more credentials (TenantID, AppID, AppSecret) in 'config.ini'."
+        Write-Error "Missing one or more credentials (TenantID, AppID, AppSecret) in configuration file."
         throw "Incomplete credentials in config file."
     }
 
-    Write-Host "Credentials loaded successfully for YourCompany.com." -ForegroundColor Green
-    
+    Write-Host "Credentials loaded successfully." -ForegroundColor Green
+
     return $credentials
 }
 
@@ -624,53 +683,45 @@ function Get-HardwareInfo {
     try {
         # Collect hardware info with retry logic
         $hwInfo = Invoke-WithRetry -MaxRetries $script:Config.DefaultMaxRetries -InitialDelaySeconds $script:Config.DefaultInitialDelaySeconds -OperationName "Hardware Hash Collection" -ScriptBlock {
-            $session = $null
-            try {
-                # Create CIM session
-                $session = New-CimSession -ErrorAction Stop
+            # Get serial number
+            Write-Host "Querying BIOS information..." -ForegroundColor Cyan
+            $bios = Get-CimInstance -Class Win32_BIOS -ErrorAction Stop
+            $serialNumber = $bios.SerialNumber
 
-                # Get serial number
-                Write-Host "Querying BIOS information..." -ForegroundColor Cyan
-                $bios = Get-CimInstance -CimSession $session -Class Win32_BIOS -ErrorAction Stop
-                $serialNumber = $bios.SerialNumber
-
-                if ([string]::IsNullOrWhiteSpace($serialNumber)) {
-                    throw "Serial number is empty or null"
-                }
-
-                # Get hardware hash from MDM namespace
-                Write-Host "Querying hardware hash from MDM namespace..." -ForegroundColor Cyan
-                $devDetail = Get-CimInstance -CimSession $session `
-                    -Namespace root/cimv2/mdm/dmmap `
-                    -Class MDM_DevDetail_Ext01 `
-                    -Filter "InstanceID='Ext' AND ParentID='./DevDetail'" `
-                    -ErrorAction Stop
-
-                $hardwareHash = $devDetail.DeviceHardwareData
-
-                if ([string]::IsNullOrWhiteSpace($hardwareHash)) {
-                    throw "Hardware hash is empty or null"
-                }
-
-                # Validate hash format (should be base64)
-                try {
-                    $null = [Convert]::FromBase64String($hardwareHash)
-                }
-                catch {
-                    throw "Hardware hash is not in valid base64 format"
-                }
-
-                return @{
-                    SerialNumber = $serialNumber.Trim()
-                    HardwareHash = $hardwareHash
-                    Manufacturer = $bios.Manufacturer
-                    Model = (Get-CimInstance -CimSession $session -Class Win32_ComputerSystem -ErrorAction SilentlyContinue).Model
-                }
+            if ([string]::IsNullOrWhiteSpace($serialNumber)) {
+                throw "Serial number is empty or null"
             }
-            finally {
-                if ($session) {
-                    Remove-CimSession $session -ErrorAction SilentlyContinue
-                }
+
+            # Get hardware hash from MDM namespace
+            Write-Host "Querying hardware hash from MDM namespace..." -ForegroundColor Cyan
+            $devDetail = Get-CimInstance `
+                -Namespace root/cimv2/mdm/dmmap `
+                -Class MDM_DevDetail_Ext01 `
+                -Filter "InstanceID='Ext' AND ParentID='./DevDetail'" `
+                -ErrorAction Stop
+
+            $hardwareHash = $devDetail.DeviceHardwareData
+
+            if ([string]::IsNullOrWhiteSpace($hardwareHash)) {
+                throw "Hardware hash is empty or null"
+            }
+
+            # Validate hash format (should be base64)
+            try {
+                $null = [Convert]::FromBase64String($hardwareHash)
+            }
+            catch {
+                throw "Hardware hash is not in valid base64 format"
+            }
+
+            # Get computer model
+            $computerSystem = Get-CimInstance -Class Win32_ComputerSystem -ErrorAction SilentlyContinue
+
+            return @{
+                SerialNumber = $serialNumber.Trim()
+                HardwareHash = $hardwareHash
+                Manufacturer = $bios.Manufacturer
+                Model = $computerSystem.Model
             }
         }
 
@@ -905,7 +956,11 @@ function Invoke-UploadAutopilotHash {
         [hashtable]$HardwareInfo,
 
         [Parameter(Mandatory = $true)]
-        [hashtable]$Profile
+        [hashtable]$Profile,
+
+        [Parameter(Mandatory = $false)]
+        [ValidateSet("Prompt", "Skip", "Delete", "Error")]
+        [string]$DuplicateHandling = "Prompt"
     )
 
     Write-Host "Uploading the hardware hash for serial number $($HardwareInfo.SerialNumber) to the Autopilot service..." -ForegroundColor Cyan
@@ -944,14 +999,31 @@ function Invoke-UploadAutopilotHash {
             Write-Host ""
         }
 
-        Write-Host "Would you like to delete the existing registration and re-register with the new settings?" -ForegroundColor Yellow
-        Write-Host "  [Y] Yes - Delete and re-register (recommended if changing Group Tag)" -ForegroundColor White
-        Write-Host "  [N] No  - Cancel registration (device keeps existing settings)" -ForegroundColor White
-        Write-Host ""
+        # Determine action based on DuplicateHandling parameter
+        $shouldDelete = $false
+        switch ($DuplicateHandling) {
+            "Prompt" {
+                Write-Host "Would you like to delete the existing registration and re-register with the new settings?" -ForegroundColor Yellow
+                Write-Host "  [Y] Yes - Delete and re-register (recommended if changing Group Tag)" -ForegroundColor White
+                Write-Host "  [N] No  - Cancel registration (device keeps existing settings)" -ForegroundColor White
+                Write-Host ""
+                $choice = Read-Host "Delete and re-register? (y/n)"
+                $shouldDelete = ($choice -eq 'y' -or $choice -eq 'Y')
+            }
+            "Delete" {
+                Write-Host "DuplicateHandling=Delete: Automatically deleting and re-registering..." -ForegroundColor Cyan
+                $shouldDelete = $true
+            }
+            "Skip" {
+                Write-Host "DuplicateHandling=Skip: Skipping registration (device keeps existing settings)." -ForegroundColor Yellow
+                return
+            }
+            "Error" {
+                throw "Device already registered and DuplicateHandling is set to Error. Registration aborted."
+            }
+        }
 
-        $choice = Read-Host "Delete and re-register? (y/n)"
-
-        if ($choice -eq 'y' -or $choice -eq 'Y') {
+        if ($shouldDelete) {
             Write-Host ""
             Write-Host "Deleting existing device registration..." -ForegroundColor Cyan
 
@@ -1034,15 +1106,31 @@ function Invoke-UploadAutopilotHash {
             Write-Host "This device is already registered in Autopilot!" -ForegroundColor Yellow
             Write-Host ""
 
-            # Prompt user to delete and re-register
-            Write-Host "Would you like to delete the existing entry and re-register with the new profile?" -ForegroundColor Cyan
-            Write-Host "  - Current device will be removed from Autopilot" -ForegroundColor Gray
-            Write-Host "  - New registration will use the selected profile settings" -ForegroundColor Gray
-            Write-Host ""
+            # Determine action based on DuplicateHandling parameter (fallback error handling)
+            $shouldDeleteOnError = $false
+            switch ($DuplicateHandling) {
+                "Prompt" {
+                    Write-Host "Would you like to delete the existing entry and re-register with the new profile?" -ForegroundColor Cyan
+                    Write-Host "  - Current device will be removed from Autopilot" -ForegroundColor Gray
+                    Write-Host "  - New registration will use the selected profile settings" -ForegroundColor Gray
+                    Write-Host ""
+                    $choice = Read-Host "Delete and re-register? (y/n)"
+                    $shouldDeleteOnError = ($choice -eq 'y' -or $choice -eq 'Y')
+                }
+                "Delete" {
+                    Write-Host "DuplicateHandling=Delete: Automatically deleting and re-registering..." -ForegroundColor Cyan
+                    $shouldDeleteOnError = $true
+                }
+                "Skip" {
+                    Write-Host "DuplicateHandling=Skip: Skipping registration (device keeps existing settings)." -ForegroundColor Yellow
+                    throw "Device already exists and DuplicateHandling is set to Skip."
+                }
+                "Error" {
+                    throw "Device already registered and DuplicateHandling is set to Error. Registration aborted."
+                }
+            }
 
-            $choice = Read-Host "Delete and re-register? (y/n)"
-
-            if ($choice -eq 'y' -or $choice -eq 'Y') {
+            if ($shouldDeleteOnError) {
                 Write-Host ""
                 Write-Host "Attempting to delete and re-register device..." -ForegroundColor Cyan
 
@@ -1165,7 +1253,7 @@ try {
     Write-Host ""
     $hardwareInfo = Get-HardwareInfo
     Write-Host ""
-    Invoke-UploadAutopilotHash -HardwareInfo $hardwareInfo -Profile $profile
+    Invoke-UploadAutopilotHash -HardwareInfo $hardwareInfo -Profile $profile -DuplicateHandling $DuplicateHandling
 
     #===============================================================================================================
     # FINAL SUMMARY
