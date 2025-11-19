@@ -12,8 +12,7 @@ ISO_Root/
 │
 └── scripts/
     ├── Register-ThisPC.ps1       (Main registration script)
-    ├── Register-ThisPC.json      (🔴 SENSITIVE credentials - preferred)
-    ├── Register-ThisPC.ini       (🔴 SENSITIVE credentials - legacy)
+    ├── Register-ThisPC.json      (🔴 SENSITIVE credentials )
     ├── branding.ps1              (Corporate branding module)
     ├── .gitignore                (Git protection)
     │
@@ -22,11 +21,8 @@ ISO_Root/
         ├── SECURITY_README.md
         ├── QUICK_REFERENCE.md
         ├── MIGRATION_GUIDE.md
-        ├── ISO_DEPLOYMENT_GUIDE.md
-        ├── Register-ThisPC.json.example
-        ├── Test-Enhancements.ps1
-        ├── TEST_RESULTS.md
-        └── Prepare-ISO-Structure.ps1
+        └── ISO_DEPLOYMENT_GUIDE.md
+
 ```
 
 ## Why This Structure?
@@ -37,7 +33,7 @@ ISO_Root/
 - Users can simply type: `Register-ThisPC.cmd` (no navigation needed)
 
 **2. Security**
-- Sensitive files (JSON/INI with credentials) are in `scripts/` subfolder, not root
+- Sensitive files (JSON with credentials) are in `scripts/` subfolder, not root
 - Clear separation between launcher and components
 - Documentation included but organized
 
@@ -86,7 +82,7 @@ Once the ISO/USB is created and mounted during Windows setup:
 
 ⚠️ **IMPORTANT**
 
-- The `Register-ThisPC.json` or `Register-ThisPC.ini` files contain HIGHLY SENSITIVE Azure AD credentials
+- The `Register-ThisPC.json` file contain HIGHLY SENSITIVE Azure AD credentials
 - Only authorized IT personnel should have access to this structure
 - Encrypt USB drives with BitLocker To Go
 - Track each ISO/USB deployment for compliance
@@ -95,8 +91,7 @@ Once the ISO/USB is created and mounted during Windows setup:
 
 **Configuration File Options:**
 - **JSON (preferred)**: Modern, cleaner format - `Register-ThisPC.json`
-- **INI (legacy)**: Traditional format - `Register-ThisPC.ini`
-- Script checks for JSON first, then falls back to INI
+- Script checks for JSON
 
 See `scripts/Documentation/SECURITY_README.md` and `MIGRATION_GUIDE.md` for complete security guidelines and migration information.
 
@@ -133,7 +128,6 @@ See `scripts/Documentation/SECURITY_README.md` and `MIGRATION_GUIDE.md` for comp
 - **Complete Guide:** `scripts/Documentation/ISO_DEPLOYMENT_GUIDE.md`
 - **Quick Reference:** `scripts/Documentation/QUICK_REFERENCE.md`
 - **Security Guide:** `scripts/Documentation/SECURITY_README.md`
-- **Test Results:** `scripts/Documentation/TEST_RESULTS.md`
 - **JSON Template:** `scripts/Documentation/Register-ThisPC.json.example` ⭐ NEW
 
 ---
