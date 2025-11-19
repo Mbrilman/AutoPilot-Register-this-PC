@@ -10,16 +10,15 @@ ISO/USB Root/
 │
 └── scripts/                      (All PowerShell files and config)
     ├── Register-ThisPC.ps1       (Main script)
-    ├── Register-ThisPC.ini       (🔴 SENSITIVE credentials)
-    ├── branding.ps1      (Branding module)
+    ├── Register-ThisPC.json      (🔴 SENSITIVE credentials)
+    ├── branding.ps1              (Branding module)
     ├── .gitignore                (Git protection - optional on ISO)
     │
     └── Documentation/            (Reference materials)
         ├── README.md
         ├── SECURITY_README.md
-        ├── QUICK_REFERENCE.md
-        ├── Test-Enhancements.ps1
-        └── TEST_RESULTS.md
+        └── QUICK_REFERENCE.md
+        
 ```
 
 ---
@@ -32,7 +31,7 @@ ISO/USB Root/
 - They can simply type: `Register-ThisPC.cmd` (no need to navigate)
 
 **Reason 2: Security**
-- Sensitive files (INI with credentials) are in a subfolder, not root
+- Sensitive files (Json with credentials) are in a subfolder, not root
 - Clear separation between launcher and sensitive components
 - Documentation is easily accessible but separate
 
@@ -52,7 +51,7 @@ Your current development structure:
 Project/Windows-iso-with-apjson-Autounattend/Script/
 ├── Register-this-PC.cmd
 ├── Register-ThisPC.ps1
-├── Register-ThisPC.ini
+├── Register-ThisPC.Json
 ├── branding.ps1
 ├── .gitignore
 └── Documentation/
@@ -68,8 +67,8 @@ Project/Windows-iso-with-apjson-Autounattend/Script/
 
 2. **Set File Permissions (for source files)**
    ```powershell
-   # Restrict access to INI file
-   $iniFile = "Register-ThisPC.ini"
+   # Restrict access to json file
+   $iniFile = "Register-ThisPC.json"
    icacls $iniFile /inheritance:r
    icacls $iniFile /grant:r "Administrators:(F)"
    icacls $iniFile /grant:r "SYSTEM:(F)"
@@ -78,7 +77,7 @@ Project/Windows-iso-with-apjson-Autounattend/Script/
 3. **Test the Structure**
    ```powershell
    # Run the test suite
-   .\Documentation\Test-Enhancements.ps1
+ 
    ```
 
 ### Step 3: Create ISO Directory Structure
