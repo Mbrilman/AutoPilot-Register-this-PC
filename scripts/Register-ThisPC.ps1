@@ -13,7 +13,7 @@ Key Workflow:
 5. It dynamically fetches and displays available Autopilot profiles from the selected tenant.
 6. Based on the profile choice, it maps a corresponding Order ID.
 7. Finally, it collects the hardware hash and uploads it to the Autopilot service.
-All configuration settings, including tenant credentials, are read from 'Register-ThisPC.ini' located in the same directory as this script.
+All configuration settings, including tenant credentials, are read from 'Register-ThisPC.json' located in the same directory as this script.
 
 .NOTES
 Version:          4.0.0
@@ -28,7 +28,7 @@ This script contains access to sensitive Azure AD credentials and Intune service
 
 RESTRICTIONS:
 - This script is RESTRICTED to authorized IT personnel ONLY
-- Requires access to Register-ThisPC.ini which contains SENSITIVE credentials
+- Requires access to Register-ThisPC.json which contains SENSITIVE credentials
 - Grants ability to register devices in your organization's Autopilot service
 - Unauthorized use may result in security policy violations
 
@@ -38,7 +38,7 @@ AUTHORIZED USERS:
 - Access must be approved by IT management
 
 SECURITY REQUIREMENTS:
-1. Ensure Register-ThisPC.ini has restricted file permissions (Administrators only)
+1. Ensure Register-ThisPC.json has restricted file permissions (Administrators only)
 2. Do NOT share credentials with unauthorized personnel
 3. Delete sensitive files from devices after provisioning
 4. Rotate Azure AD App Secret regularly (recommended: every 90 days)
@@ -454,7 +454,6 @@ function Get-TenantCredentials {
 
     # Try JSON configuration first (preferred)
     $jsonConfigPath = Join-Path $scriptRoot "Register-ThisPC.json"
-    $iniConfigPath = Join-Path $scriptRoot "Register-ThisPC.ini"
 
     if (Test-Path $jsonConfigPath) {
         # Load from JSON (cleaner, more modern approach)
@@ -476,56 +475,9 @@ function Get-TenantCredentials {
             throw "Invalid JSON config file."
         }
     }
-    elseif (Test-Path $iniConfigPath) {
-        # Fall back to INI (backward compatibility)
-        Write-Host "Reading credentials from $iniConfigPath..." -ForegroundColor Green
-        $configLines = Get-Content $iniConfigPath
-
-        # INI parsing with comment support
-        $inTargetSection = $false
-        $sectionFound = $false
-
-        foreach ($line in $configLines) {
-            # Skip empty lines and comments
-            if ([string]::IsNullOrWhiteSpace($line) -or $line.Trim().StartsWith(';')) {
-                continue
-            }
-
-            # Check for section headers
-            if ($line -match '^\[(.+)\]$') {
-                $sectionName = $Matches[1]
-                if ($sectionName -eq 'YourCompanyCredentials') {
-                    $inTargetSection = $true
-                    $sectionFound = $true
-                }
-                else {
-                    $inTargetSection = $false
-                }
-                continue
-            }
-
-            # Parse key-value pairs in target section
-            if ($inTargetSection -and $line -match '^(.+?)=(.+)$') {
-                $key = $Matches[1].Trim()
-                $value = $Matches[2].Trim()
-
-                switch ($key) {
-                    'TenantID' { $credentials.TenantID = $value }
-                    'AppID' { $credentials.AppID = $value }
-                    'AppSecret' { $credentials.AppSecret = $value }
-                }
-            }
-        }
-
-        if (-not $sectionFound) {
-            Write-Error "Section [YourCompanyCredentials] not found in $iniConfigPath."
-            throw "Config section missing."
-        }
-    }
     else {
         Write-Error "Configuration file not found. Looking for:"
-        Write-Host "  - $jsonConfigPath (preferred, JSON format)" -ForegroundColor Yellow
-        Write-Host "  - $iniConfigPath (legacy, INI format)" -ForegroundColor Yellow
+        Write-Host "  - $jsonConfigPath (JSON format)" -ForegroundColor Yellow
         Write-Host ""
         Write-Host "This file contains sensitive Azure AD credentials required for Autopilot registration." -ForegroundColor Yellow
         Write-Host "If you are authorized to use this tool, contact IT Security to obtain the configuration file." -ForegroundColor Yellow
@@ -577,12 +529,46 @@ function Get-AutopilotProfile {
     # Note: Both 'groupTag' and 'purchaseOrderIdentifier' (Order ID) are set to the same value
     # This ensures consistency and matches Azure AD dynamic group filtering requirements
     # Maps Autopilot Profile Display Name -> Group Tag (short, friendly name)
-    $groupTagMapping = @{
-        "ENS_EU_Autopilot_Deployment" = "EsdecEU"
-        "SF_EU_Autopilot_Deployment"  = "SF"
-        "SLG_Autopilot_Deployment"    = "Schletter"
-        "SLG_WG_Autopilot_Deployment" = "Schletter_WG"
-        "US_Autopilot_Deployment"     = "US"
+    # Load mappings from external JSON configuration file
+    $groupTagMappingPath = Join-Path $scriptRoot "GroupTagMapping.json"
+
+    if (Test-Path $groupTagMappingPath) {
+        try {
+            Write-Host "Loading Group Tag mappings from $groupTagMappingPath..." -ForegroundColor Cyan
+            $groupTagMappingConfig = Get-Content $groupTagMappingPath -Raw | ConvertFrom-Json
+            $groupTagMapping = @{}
+
+            # Convert JSON mappings object to PowerShell hashtable
+            $groupTagMappingConfig.mappings.PSObject.Properties | ForEach-Object {
+                $groupTagMapping[$_.Name] = $_.Value
+            }
+
+            Write-Host "Successfully loaded $($groupTagMapping.Count) Group Tag mappings." -ForegroundColor Green
+        }
+        catch {
+            Write-Warning "Failed to load Group Tag mappings from JSON: $($_.Exception.Message)"
+            Write-Warning "Using default mappings as fallback."
+            # Fallback to default mappings
+            $groupTagMapping = @{
+                "ENS_EU_Autopilot_Deployment" = "EsdecEU"
+                "SF_EU_Autopilot_Deployment"  = "SF"
+                "SLG_Autopilot_Deployment"    = "Schletter"
+                "SLG_WG_Autopilot_Deployment" = "Schletter_WG"
+                "US_Autopilot_Deployment"     = "US"
+            }
+        }
+    }
+    else {
+        Write-Warning "Group Tag mapping file not found at: $groupTagMappingPath"
+        Write-Warning "Using default mappings."
+        # Fallback to default mappings
+        $groupTagMapping = @{
+            "ENS_EU_Autopilot_Deployment" = "EsdecEU"
+            "SF_EU_Autopilot_Deployment"  = "SF"
+            "SLG_Autopilot_Deployment"    = "Schletter"
+            "SLG_WG_Autopilot_Deployment" = "Schletter_WG"
+            "US_Autopilot_Deployment"     = "US"
+        }
     }
 
     try {
@@ -1303,4 +1289,3 @@ finally {
         }
     }
 }
-

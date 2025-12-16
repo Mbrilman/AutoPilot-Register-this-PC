@@ -12,7 +12,7 @@ REM   ISO Root/
 REM   ├── Register-ThisPC.cmd        (this file - at root)
 REM   └── scripts/
 REM       ├── Register-ThisPC.ps1
-REM       ├── Register-ThisPC.ini
+REM       ├── Register-ThisPC.json
 REM       ├── branding.ps1
 REM       └── Documentation/
 REM
@@ -82,3 +82,4 @@ echo ===========================================================================
 echo Registration process completed.
 echo ================================================================================
 echo.
+

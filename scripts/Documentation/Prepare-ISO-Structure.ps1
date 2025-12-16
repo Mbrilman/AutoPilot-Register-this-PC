@@ -71,7 +71,7 @@ Write-Status "Validating source files..." "INFO"
 $requiredSourceFiles = @(
     "Register-this-PC.cmd",
     "Register-ThisPC.ps1",
-    "Register-ThisPC.ini",
+    "Register-ThisPC.json",
     "branding.ps1"
 )
 
@@ -107,16 +107,22 @@ else {
 
 Write-Host ""
 
-# Verify credentials are not expired (check INI file comments)
+# Verify credentials file structure (JSON)
 Write-Status "Checking credential file..." "INFO"
-$iniPath = Join-Path $SourcePath "Register-ThisPC.ini"
-$iniContent = Get-Content $iniPath -Raw
-
-if ($iniContent -match 'IMPORTANT SECURITY NOTICE') {
-    Write-Status "INI file has security header" "SUCCESS"
+$jsonPath = Join-Path $SourcePath "Register-ThisPC.json"
+try {
+    $jsonContent = Get-Content $jsonPath -Raw | ConvertFrom-Json
+    $requiredKeys = @("TenantID","AppID","AppSecret")
+    foreach ($key in $requiredKeys) {
+        if (-not $jsonContent.$key) {
+            throw "Missing key '$key' in Register-ThisPC.json"
+        }
+    }
+    Write-Status "Register-ThisPC.json contains required keys" "SUCCESS"
 }
-else {
-    Write-Status "INI file missing security header - consider updating" "WARNING"
+catch {
+    Write-Status "Credential file validation failed: $($_.Exception.Message)" "ERROR"
+    exit 1
 }
 
 Write-Host ""
@@ -169,7 +175,7 @@ catch {
 # Copy scripts to scripts subfolder
 $scriptFiles = @(
     "Register-ThisPC.ps1",
-    "Register-ThisPC.ini",
+    "Register-ThisPC.json",
     "branding.ps1"
 )
 
@@ -179,8 +185,8 @@ foreach ($file in $scriptFiles) {
         $destPath = Join-Path $scriptsDir $file
         Copy-Item $sourcePath -Destination $destPath -Force
 
-        # Show file size for INI (to verify it's not empty)
-        if ($file -eq "Register-ThisPC.ini") {
+        # Show file size for JSON (to verify it's not empty)
+        if ($file -eq "Register-ThisPC.json") {
             $size = (Get-Item $destPath).Length
             Write-Status "Copied $file ($size bytes)" "SUCCESS"
         }
@@ -216,7 +222,7 @@ Write-Status "Verifying structure..." "INFO"
 $verificationFiles = @(
     @{Path = "Register-this-PC.cmd"; Location = "Root"},
     @{Path = "scripts\Register-ThisPC.ps1"; Location = "Scripts"},
-    @{Path = "scripts\Register-ThisPC.ini"; Location = "Scripts"},
+    @{Path = "scripts\Register-ThisPC.json"; Location = "Scripts"},
     @{Path = "scripts\branding.ps1"; Location = "Scripts"}
 )
 
@@ -243,7 +249,7 @@ $DestinationPath\
 │
 └── scripts\
     ├── Register-ThisPC.ps1       (Main script)
-    ├── Register-ThisPC.ini       (Credentials - SENSITIVE)
+    ├── Register-ThisPC.json       (Credentials - SENSITIVE)
     ├── branding.ps1      (Branding module)
     │
     └── Documentation\            (Reference materials)
@@ -265,7 +271,7 @@ if ($allVerified) {
     Write-Host ""
     Write-Host "Next Steps:" -ForegroundColor Yellow
     Write-Host "  1. Review files in: $DestinationPath" -ForegroundColor White
-    Write-Host "  2. Verify Register-ThisPC.ini contains valid credentials" -ForegroundColor White
+    Write-Host "  2. Verify Register-ThisPC.json contains valid credentials" -ForegroundColor White
     Write-Host "  3. Create ISO file or copy to USB drive" -ForegroundColor White
     Write-Host "  4. Test in VM before production deployment" -ForegroundColor White
     Write-Host ""

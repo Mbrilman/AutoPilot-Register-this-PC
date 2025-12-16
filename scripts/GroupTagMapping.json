@@ -1,0 +1,13 @@
+{
+  "_comment": "Group Tag Mapping Configuration",
+  "_description": "Maps Autopilot Profile Display Names to Group Tags for device registration",
+  "_note": "Both 'groupTag' and 'purchaseOrderIdentifier' (Order ID) use the same value for consistency",
+  "_security": "This file contains deployment configuration. Protect access accordingly.",
+  "mappings": {
+    "ENS_EU_Autopilot_Deployment": "EsdecEU",
+    "SF_EU_Autopilot_Deployment": "SF",
+    "SLG_Autopilot_Deployment": "Schletter",
+    "SLG_WG_Autopilot_Deployment": "Schletter_WG",
+    "US_Autopilot_Deployment": "US"
+  }
+}

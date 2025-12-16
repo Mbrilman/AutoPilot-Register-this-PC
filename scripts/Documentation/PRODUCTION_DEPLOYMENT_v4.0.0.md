@@ -21,7 +21,7 @@ ISO_Root/
 │
 └── scripts/
     ├── Register-ThisPC.ps1       v4.0.0 - Main registration script
-    ├── Register-ThisPC.ini       (SENSITIVE - not in repo)
+    ├── Register-ThisPC.json       (SENSITIVE - not in repo)
     ├── branding.ps1      Corporate branding
     ├── .gitignore                Protects sensitive files
     │
@@ -69,7 +69,7 @@ ISO_Root/
 - [ ] API permissions granted and admin-consented:
   - `DeviceManagementServiceConfig.ReadWrite.All`
   - `DeviceManagementConfiguration.Read.All`
-- [ ] `Register-ThisPC.ini` file prepared with credentials
+- [ ] `Register-ThisPC.json` file prepared with credentials
 - [ ] USB drives encrypted with BitLocker To Go
 
 ### Step 1: Prepare Files
@@ -104,10 +104,10 @@ oscdimg.exe -m -o -u2 -udfver102 -bootdata:2#p0,e,b"C:\...\boot\etfsboot.com"#pE
 - [ ] Verify personnel are authorized
 - [ ] Encrypt USB drives with BitLocker To Go
 - [ ] Check App Secret expiration date (rotate every 90 days)
-- [ ] Validate file permissions on INI file (Admins only)
+- [ ] Validate file permissions on JSON file (Admins only)
 
 ### After Deployment
-- [ ] Delete `Register-ThisPC.ini` from deployed devices
+- [ ] Delete `Register-ThisPC.json` from deployed devices
 - [ ] Document registration in asset management
 - [ ] Log usage for compliance audit trail
 - [ ] Secure USB drives in locked storage

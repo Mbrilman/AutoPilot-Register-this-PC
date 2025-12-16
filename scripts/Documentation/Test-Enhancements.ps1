@@ -62,7 +62,7 @@ User: $env:USERNAME
 Test-Feature "Required Files Exist" {
     $requiredFiles = @(
         "Register-ThisPC.ps1",
-        "Register-ThisPC.ini",
+        "Register-ThisPC.json",
         "branding.ps1",
         "SECURITY_README.md",
         ".gitignore",
@@ -78,24 +78,18 @@ Test-Feature "Required Files Exist" {
     }
 }
 
-# Test 2: INI File Security Header
-Test-Feature "INI File Has Security Header" {
-    $iniPath = Join-Path $scriptRoot "Register-ThisPC.ini"
-    $content = Get-Content $iniPath -Raw
+# Test 2: JSON Config Has Required Keys
+Test-Feature "JSON Config Has Required Keys" {
+    $jsonPath = Join-Path $scriptRoot "Register-ThisPC.json"
+    $config = Get-Content $jsonPath -Raw | ConvertFrom-Json
 
-    $requiredKeywords = @(
-        "IMPORTANT SECURITY NOTICE",
-        "HIGHLY SENSITIVE CREDENTIALS",
-        "AUTHORIZED PERSONNEL ONLY",
-        "DO NOT share",
-        "ROTATE"
-    )
+    $requiredKeys = @("TenantID","AppID","AppSecret")
 
-    foreach ($keyword in $requiredKeywords) {
-        if ($content -notlike "*$keyword*") {
-            throw "Missing security keyword in INI: $keyword"
+    foreach ($key in $requiredKeys) {
+        if (-not $config.$key) {
+            throw "Missing required JSON key: $key"
         }
-        Write-Host "  [OK] Found keyword: $keyword" -ForegroundColor Gray
+        Write-Host "  [OK] Found key: $key" -ForegroundColor Gray
     }
 }
 

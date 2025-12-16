@@ -75,7 +75,7 @@ This folder contains comprehensive documentation and testing resources for the Y
 - Automated tool to prepare files for ISO creation
 - Creates correct folder structure automatically
 - Validates all required files present
-- Verifies INI file integrity
+- Validates JSON credential file integrity
 - Interactive prompts with confirmation
 
 **Usage:**
@@ -172,7 +172,7 @@ For questions about this documentation:
 
 **Parent Directory (../)**
 - `Register-ThisPC.ps1` - Main Autopilot registration script
-- `Register-ThisPC.ini` - Configuration file (HIGHLY SENSITIVE)
+- `Register-ThisPC.json` - Configuration file (HIGHLY SENSITIVE)
 - `branding.ps1` - Corporate branding module
 - `.gitignore` - Version control protection
 

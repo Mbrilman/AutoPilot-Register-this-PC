@@ -21,7 +21,7 @@ The Autopilot Registration Toolkit consists of sensitive scripts and configurati
 
 ### 🔴 **CRITICAL - Highly Sensitive**
 
-#### `Register-ThisPC.ini`
+#### `Register-ThisPC.json`
 - **Contains**: Azure AD Application credentials (Tenant ID, App ID, App Secret)
 - **Risk Level**: CRITICAL
 - **Access**: Administrators only
@@ -75,7 +75,7 @@ To request access:
 
 ### 1. File Permissions
 
-**Windows NTFS Permissions for `Register-ThisPC.ini`:**
+**Windows NTFS Permissions for `Register-ThisPC.json`:**
 ```
 Administrators: Full Control
 SYSTEM: Full Control
@@ -84,7 +84,7 @@ SYSTEM: Full Control
 
 **PowerShell command to set permissions:**
 ```powershell
-$file = "C:\Path\To\Register-ThisPC.ini"
+$file = "C:\Path\To\Register-ThisPC.json"
 $acl = Get-Acl $file
 $acl.SetAccessRuleProtection($true, $false)
 $acl.Access | ForEach-Object { $acl.RemoveAccessRule($_) }
@@ -115,7 +115,7 @@ Set-Acl $file $acl
 
 **Rotation Procedure:**
 1. Generate new secret in Azure AD App Registration
-2. Update `Register-ThisPC.ini` with new secret
+2. Update `Register-ThisPC.json` with new secret
 3. Test authentication with new credentials
 4. Revoke old secret in Azure AD
 5. Document rotation in security log
@@ -127,7 +127,7 @@ Set-Acl $file $acl
 Create `.gitignore` file:
 ```
 # Sensitive credentials
-Register-ThisPC.ini
+Register-ThisPC.json
 *.ini
 *secret*
 *password*
@@ -176,7 +176,7 @@ When distributing to authorized personnel:
 
 ### After Device Registration
 
-1. ✅ Delete `Register-ThisPC.ini` from USB drive if used on new device
+1. ✅ Delete `Register-ThisPC.json` from USB drive if used on new device
 2. ✅ Document registration in asset management system
 3. ✅ Secure or destroy temporary files
 4. ✅ Log out of administrative sessions
@@ -290,3 +290,4 @@ By using this toolkit, you acknowledge:
 ---
 
 **For questions about this document or security procedures, contact the IT Security Team.**
+

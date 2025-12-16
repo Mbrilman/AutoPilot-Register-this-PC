@@ -21,6 +21,10 @@ Register-ThisPC.json
 *.pem
 *.pfx
 
+# === Configuration Files (Safe to Commit) ===
+# Exception: GroupTagMapping.json contains no credentials, only profile mappings
+!GroupTagMapping.json
+
 # === Log Files ===
 # May contain sensitive runtime information
 *.log

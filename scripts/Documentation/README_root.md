@@ -89,9 +89,7 @@ Once the ISO/USB is created and mounted during Windows setup:
 - Rotate credentials every 90 days
 - Delete files from devices after provisioning
 
-**Configuration File Options:**
-- **JSON (preferred)**: Modern, cleaner format - `Register-ThisPC.json`
-- Script checks for JSON
+**Configuration File:** `Register-ThisPC.json` (required)
 
 See `scripts/Documentation/SECURITY_README.md` and `MIGRATION_GUIDE.md` for complete security guidelines and migration information.
 
@@ -102,15 +100,14 @@ See `scripts/Documentation/SECURITY_README.md` and `MIGRATION_GUIDE.md` for comp
 **Author:** Community Edition
 
 ### What's New in v4.1.0
-- **JSON Configuration Support**: Modern JSON config files (preferred over INI)
+- **JSON Configuration Only**: Standardized on `Register-ThisPC.json` for credentials
 - **Enhanced Automation**: New `-DuplicateHandling` parameter for unattended deployments
 - **Better Validation**: ValidateSet attributes for platform architectures
 - **Performance Optimization**: Removed unnecessary CIM session overhead
-- **Full Backward Compatibility**: Existing INI files and workflows continue to work
 - **Comprehensive Documentation**: New MIGRATION_GUIDE.md and examples
 
 ### Key Features
-- **Dual Config Format**: Supports both JSON (modern) and INI (legacy)
+- **JSON Credentials**: Single required config file (`Register-ThisPC.json`)
 - **Automation Modes**: Prompt, Delete, Skip, or Error on duplicates
 - **Unified Group Tag Management**: Group Tag and Order ID use the same value
 - **Proactive Duplicate Detection**: Checks for existing devices BEFORE upload

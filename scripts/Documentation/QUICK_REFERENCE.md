@@ -9,7 +9,7 @@
 ### ✅ Pre-Flight Checklist
 
 - [ ] I am authorized to use this toolkit
-- [ ] I have completed security training
+- [ ] I have completed security traJSONng
 - [ ] I am on a secure, managed device
 - [ ] I have the latest version of files
 - [ ] Credentials have not expired (check rotation date)
@@ -22,7 +22,7 @@
 | File | Purpose | Sensitivity |
 |------|---------|-------------|
 | `Register-ThisPC.ps1` | Main registration script | HIGH |
-| `Register-ThisPC.ini` | **Azure AD credentials** | **CRITICAL** |
+| `Register-ThisPC.json` | **Azure AD credentials** | **CRITICAL** |
 | `branding.ps1` | YourCompany logo/branding | LOW |
 | `Register-this-PC.cmd` | Batch launcher | MEDIUM |
 | `SECURITY_README.md` | Security guidelines | INFO |
@@ -34,7 +34,7 @@
 ### Method 1: PowerShell (Recommended)
 
 ```powershell
-# Open PowerShell as Administrator
+# Open PowerShell as AdmJSONstrator
 # Navigate to script directory
 cd "X:\Path\To\Script"
 
@@ -58,7 +58,7 @@ Register-this-PC.cmd
 
 1. **PowerShell 7 Check** - Auto-installs if needed (or relaunches if already installed)
 2. **Network Test** - Verifies connectivity
-3. **Credentials** - Loads from INI file (displays user/computer/time)
+3. **Credentials** - Loads from JSON file (displays user/computer/time)
 4. **Module Install** - Microsoft.Graph.Authentication
 5. **Graph Auth** - Connects to Azure AD
 6. **Profile Selection** - Choose Autopilot deployment profile
@@ -107,12 +107,12 @@ Register-this-PC.cmd
 - Try different network if on guest WiFi
 
 ### "Authentication to Graph API failed"
-- Verify credentials in INI file are correct
+- Verify credentials in JSON file are correct
 - Check if App Secret has expired (rotate every 90 days)
 - Ensure API permissions are granted and consented
 
 ### "Failed to collect hardware hash"
-- Run script as Administrator
+- Run script as AdmJSONstrator
 - Verify device is physical or supported VM
 - Check WMI service is running: `Get-Service winmgmt`
 
@@ -137,8 +137,8 @@ Register-this-PC.cmd
 
 - [ ] Verify device appears in Intune portal
 - [ ] Document registration in asset management
-- [ ] Delete INI file if copied to device
-- [ ] Log out of administrative session
+- [ ] Delete JSON file if copied to device
+- [ ] Log out of admJSONstrative session
 - [ ] Reboot device (if prompted)
 
 ### Verification
@@ -157,9 +157,9 @@ Register-this-PC.cmd
 
 ### 🔴 DO NOT:
 - ❌ Share credentials with unauthorized personnel
-- ❌ Email or message the INI file
+- ❌ Email or message the JSON file
 - ❌ Leave USB drive with credentials unattended
-- ❌ Commit INI file to Git/version control
+- ❌ Commit JSON file to Git/version control
 - ❌ Store on unencrypted media
 
 ### ✅ DO:
@@ -192,10 +192,10 @@ Register-this-PC.cmd
 ```powershell
 # Check in Azure Portal
 # Azure AD > App registrations > [Your App] > Certificates & secrets
-# Note expiration date in INI file header
+# Note expiration date in JSON file header
 ```
 
-**Next Rotation Due:** [Check INI file header or Azure Portal]
+**Next Rotation Due:** [Check JSON file header or Azure Portal]
 
 ---
 
@@ -258,3 +258,5 @@ This will:
 ---
 
 **Remember: When in doubt, ask IT Security! Better to ask than to create a security incident.**
+
+

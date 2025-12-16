@@ -60,7 +60,7 @@ Project/Windows-iso-with-apjson-Autounattend/Script/
 
 ### Step 2: Prepare Files for ISO
 
-1. **Update Credentials in Register-ThisPC.ini**
+1. **Update Credentials in Register-ThisPC.json**
    - Verify Azure AD App credentials are current
    - Check App Secret expiration date
    - Test authentication before deployment
@@ -68,10 +68,10 @@ Project/Windows-iso-with-apjson-Autounattend/Script/
 2. **Set File Permissions (for source files)**
    ```powershell
    # Restrict access to json file
-   $iniFile = "Register-ThisPC.json"
-   icacls $iniFile /inheritance:r
-   icacls $iniFile /grant:r "Administrators:(F)"
-   icacls $iniFile /grant:r "SYSTEM:(F)"
+   $jsonFile = "Register-ThisPC.json"
+   icacls $jsonFile /inheritance:r
+   icacls $jsonFile /grant:r "AdmJSONstrators:(F)"
+   icacls $jsonFile /grant:r "SYSTEM:(F)"
    ```
 
 3. **Test the Structure**
@@ -94,7 +94,7 @@ Copy-Item "Register-this-PC.cmd" -Destination $isoStaging
 
 # Copy all scripts to scripts subfolder
 Copy-Item "Register-ThisPC.ps1" -Destination "$isoStaging\scripts"
-Copy-Item "Register-ThisPC.ini" -Destination "$isoStaging\scripts"
+Copy-Item "Register-ThisPC.json" -Destination "$isoStaging\scripts"
 Copy-Item "branding.ps1" -Destination "$isoStaging\scripts"
 
 # Copy Documentation folder
@@ -128,7 +128,7 @@ Write-Host "[OK] Copied Register-this-PC.cmd to root" -ForegroundColor Green
 # Copy scripts
 $scriptFiles = @(
     "Register-ThisPC.ps1",
-    "Register-ThisPC.ini",
+    "Register-ThisPC.json",
     "branding.ps1"
 )
 
@@ -146,7 +146,7 @@ Write-Host "`nVerifying structure..." -ForegroundColor Yellow
 $requiredFiles = @(
     "$DestinationPath\Register-this-PC.cmd",
     "$DestinationPath\scripts\Register-ThisPC.ps1",
-    "$DestinationPath\scripts\Register-ThisPC.ini",
+    "$DestinationPath\scripts\Register-ThisPC.json",
     "$DestinationPath\scripts\branding.ps1"
 )
 
@@ -210,7 +210,7 @@ oscdimg.exe -m -o -u2 -udfver102 -bootdata:2#p0,e,bC:\Temp\AutopilotISO\boot\etf
 6. Verify:
    - ✅ Script finds files correctly
    - ✅ Branding displays
-   - ✅ Credentials load from INI
+   - ✅ Credentials load from JSON
    - ✅ All checks pass
 
 ### Common Test Issues
@@ -224,8 +224,8 @@ oscdimg.exe -m -o -u2 -udfver102 -bootdata:2#p0,e,bC:\Temp\AutopilotISO\boot\etf
 - **Fix:** Ensure all .ps1 files are in `scripts\` not root
 
 **Issue:** "Section [YourCompanyCredentials] not found"
-- **Cause:** Register-ThisPC.ini is corrupted or missing
-- **Fix:** Re-copy INI file, verify encoding (UTF-8)
+- **Cause:** Register-ThisPC.json is corrupted or missing
+- **Fix:** Re-copy JSON file, verify encoding (UTF-8)
 
 ---
 
@@ -292,8 +292,8 @@ Register-ThisPC.cmd
 
 ### When App Secret is Rotated (Every 90 Days):
 
-1. **Update source INI file**
-   ```ini
+1. **Update source JSON file**
+   ```JSON
    [YourCompanyCredentials]
    TenantID=<same>
    AppID=<same>
@@ -347,7 +347,7 @@ Monthly review:
 - Which users ran the script (from audit logs)
 - Were all uses authorized?
 - Any unusual patterns or failures?
-- Update training if common errors occur
+- Update traJSONng if common errors occur
 
 ---
 
@@ -405,3 +405,5 @@ Expected structure:
 **Created:** 11/11/2025
 **Author:** Community Edition
 **Classification:** INTERNAL - RESTRICTED
+
+

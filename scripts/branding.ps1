@@ -11,7 +11,7 @@
 # Do not execute this file directly.
 #
 # CUSTOMIZATION:
-# Replace the unicorn logo below with your own company ASCII art logo.
+# Replace the octopus logo below with your own company ASCII art logo.
 # Modify colors, tagline, and author information as needed.
 #
 # Author:  Your Name
@@ -24,16 +24,6 @@ function Show-Branding {
         [string]$scriptVersion
     )
 
-    # TEMPORARY: Pause before clearing screen to review output
-    Write-Host "`n[DEBUG] Press any key to continue and show logo..." -ForegroundColor Yellow
-    try {
-        $null = $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")
-    }
-    catch {
-        # In non-interactive environments, just wait a moment
-        Start-Sleep -Seconds 3
-    }
-
     # Clear screen (handle non-interactive environments gracefully)
     try {
         Clear-Host
@@ -43,34 +33,37 @@ function Show-Branding {
         Write-Host "`n`n`n"
     }
 
-    $logoTopColor = "Magenta"
-    $logoMidColor = "Cyan"
-    $logoBottomColor = "White"
+    $logoTopColor = "Cyan"
+    $logoMidColor = "Blue"
+    $logoBottomColor = "DarkCyan"
     $lineColor = "DarkBlue"
     $textColor = "White"
     $labelColor = "Gray"
 
-    # Unicorn ASCII Art Logo
+    # Octopus ASCII Art Logo
     $logoTop = @"
-                    ,.
-                   (_|,.
-                  ,' /, )_______
-               __j o``-'        ``-.
-              (")                   \
-               `-j                   |
-                 _|   /--______     /
+                       ___
+                    .-'   `-.
+                   /         \
+                   |         ;
+                   |         |           ___.--,
+          _.._     |0) ~ (0) |    _.---'`__.-( (_.
+   __.--'`_.. '.__.\    '--. \_.-' ,.--'`     `""`
+  ( ,.--'`   ',__ /./;   ;, '.__.'`    __
 "@
     $logoMid = @"
-                /  / (  |   /
-               /  /   `-'  /
-              /  /         |
+  _`) )  .---.__.' / |   |\   \__..--""  """--.,_
+ `---' .'.''-._.-'`_./  /\ '.  \ _.-~~~````~~~-._`-.__.'
+       | |  .' _.-' |  |  \  \  '.               `~---`
+       \ \/ .'     \  \   '. '-._)
 "@
     $logoBottom = @"
-             /  '           !
-            /  .-.      _,'
-           |  (   \    <
-           \   `-'  \
-            `-.___,' ;-._
+        \/ /        \  \    `=.__`~-.
+        / /\         `) )    / / `"".`\
+  , _.-'.'\ \        / /    ( (     / /
+   `--~`   ) )    .-'.'      '.'.  | (
+          (/`    ( (`          ) )  '-;
+           `      '-;         (-'
 "@
 
     Write-Host $logoTop -ForegroundColor $logoTopColor
